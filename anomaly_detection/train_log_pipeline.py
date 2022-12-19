@@ -43,9 +43,3 @@ kfp.compiler.Compiler().compile(
 
 
 client.create_run_from_pipeline_func(train_log_anomaly_pl, arguments={})
-# client.create_recurring_run(
-#     experiment_id = client.get_experiment(experiment_name="Default").id,
-#     job_name="train-log-anomaly",
-#     description="version: croffle:feature/pipeline-migration",
-#     cron_expression="0 0 19 * *",
-#     pipeline_package_path = "./train_log_anomaly_pl.yaml")
