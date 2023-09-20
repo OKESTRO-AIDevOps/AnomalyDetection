@@ -72,12 +72,26 @@ calc_total_score_component = components.create_component_from_func(
     name="cantabile-calc-total-anomaly",
 )
 def calc_total_score_pl():
-    dsl.get_pipeline_conf().set_image_pull_secrets([kubernetes.client.V1LocalObjectReference(name="aiops")])
+    # Define the image pull secret
+    image_pull_secrets = [V1LocalObjectReference(name="aiops")]
+    dsl.get_pipeline_conf().set_image_pull_secrets(image_pull_secrets)
+
+    # Define the shared PVC volume
     vop = dsl.PipelineVolume(pvc='cantabile-pvc')
+
+    # Create tasks for metric anomaly detection (CPU and Memory)
     metric_task1 = metric_anomaly_component("cpu").add_pvolumes({"/mnt/anomaly/": vop})
     metric_task2 = metric_anomaly_component("memory").add_pvolumes({"/mnt/anomaly/": vop})
+
+    # Create a task for log anomaly detection
     log_task = log_anomaly_component().add_pvolumes({"/mnt/anomaly/": vop})
-    calc_total_score_component(metric_task1.output, metric_task2.output, log_task.output).add_pvolumes({"/mnt/anomaly": vop})
+
+    # Create a task for calculating the total score
+    total_score_task = calc_total_score_component(
+        metric_task1.output,
+        metric_task2.output,
+        log_task.output
+    ).add_pvolumes({"/mnt/anomaly": vop})
 
 kfp.compiler.Compiler().compile(
     pipeline_func=calc_total_score_pl,
