@@ -11,45 +11,35 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(
 from utils.logs.log import standardLog
 standardLog = standardLog()
 
-def total_main():
+def connect_to_elasticsearch():
     config = configparser.ConfigParser()
-    abs_path = '/croffle'
-    config.read(abs_path + "/config.ini")
+    config.read('/croffle/config.ini')
 
-    es_host=config.get('ES','HOST')
-    es_port=config.get('ES','PORT')
-    es_id=config.get('ES','USER')
-    es_pw=config.get('ES','PASSWORD')
+    es_host = config.get('ES', 'HOST')
+    es_port = config.get('ES', 'PORT')
+    es_id = config.get('ES', 'USER')
+    es_pw = config.get('ES', 'PASSWORD')
 
     try:
         es = Elasticsearch(hosts=f"http://{es_id}:{es_pw}@{es_host}:{es_port}/", timeout=1000)
+        return es
     except Exception as e:
-        standardLog.sending_log('error', e).error('AnomalyDetection Connect ES error')
-        exit(1)
+        log_error_and_exit("AnomalyDetection Connect ES error", e)
 
+def log_error_and_exit(message, error=None):
+    standardLog.sending_log('error', error).error(message)
+    exit(1)
+
+def main():
     try:
+        es = connect_to_elasticsearch()
         total_anomaly = TotalAnomaly(es)
-    except Exception as e:
-        standardLog.sending_log('error', e).error(f'AnomalyDetection total init error')
-        exit(1)
-
-    try:
         total_anomaly.retrieve_metric_anomaly()
-    except Exception as e:
-        standardLog.sending_log('error', e).error(f'AnomalyDetection retrieve metric error')
-        exit(1)
-    try:
         total_anomaly.retrieve_log_anomaly()
-    except Exception as e:
-        standardLog.sending_log('error', e).error(f'AnomalyDetection retrieve log error')
-        exit(1)
-    try:
         total_anomaly.update_total_anomaly_score()
+        standardLog.sending_log('success').info('AnomalyDetection calc total score success')
     except Exception as e:
-        standardLog.sending_log('error', e).error(f'AnomalyDetection update total score error')
-        exit(1)
+        log_error_and_exit(f'AnomalyDetection total error', e)
 
-    standardLog.sending_log('success').info('AnomalyDetection calc total score success')
-
-if __name__ == '__main__':
-    total_main()
+if __name__ == "__main__":
+    main()

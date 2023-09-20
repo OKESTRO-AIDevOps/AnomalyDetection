@@ -7,13 +7,10 @@ import kubernetes.client
 client = kfp.Client(host='IP address')
 
 def metric_anomaly_detection(device: str) -> bool:
-    import sys
-    sys.path.append('/anomaly/')
     from utils.result import Reporting
     reporting = Reporting(job='anomaly-detection')
 
     try:
-        sys.path.append('/anomaly_detection')
         from metric_anomaly_main import metric_main
         metric_main(device)
     except:
