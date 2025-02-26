@@ -7,7 +7,7 @@ import kubernetes.client
 
 client = kfp.Client(host='IP address')
 
-
+  
 def metric_anomaly_detection(device: str) -> bool:
     from utils.result import Reporting
     reporting = Reporting(job='anomaly-detection')
